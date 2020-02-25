@@ -1,0 +1,24 @@
+version: "3"
+
+services:
+    postgres_test:
+        image: "postgres:12"
+        environment:
+            POSTGRES_DB: "solde"
+            POSTGRES_USER: "everytimeicob"
+            POSTGRES_PASSWORD: "everytimeicob"
+            PGDATA: "/var/lib/postgresql/data/pgdata"
+            TZ: 'Europe/Paris'
+            PGTZ: 'Europe/Paris'
+        volumes:
+            - "./docker/postgres/initdb.d/:/docker-entrypoint-initdb.d/"
+        expose:
+            - "5778"
+        ports:
+            - "5778:5432"
+        networks:
+            - "back"
+
+networks:
+    back:
+        driver: bridge
