@@ -1,0 +1,56 @@
+{
+    "name": "everytimeicob/solde",
+    "license": "MIT",
+    "description": "Estimate how much you can spend according on criteria.",
+    "type": "project",
+    "require": {
+        "ext-pcntl": "*",
+        "ext-intl": "*",
+        "ext-json": "*",
+        "php": "^7.4",
+        "league/climate": "^3.5",
+        "doctrine/dbal": "^2.10",
+        "doctrine/migrations": "^2.2",
+        "vlucas/phpdotenv": "^4.1",
+        "ramsey/uuid": "^3.9",
+        "moneyphp/money": "^3.3",
+        "beberlei/assert": "^3.2",
+        "symfony/console": "^5.0",
+        "php-di/php-di": "^6.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^9.0",
+        "mockery/mockery": "^1.3",
+        "behat/behat": "^3.6",
+        "symfony/error-handler": "^5.0"
+    },
+    "autoload": {
+        "files": [
+            "app/bootstrap.php"
+        ],
+        "psr-0": {
+            "BudgetCalculator\\": "src/"
+        },
+        "psr-4": {
+            "BudgetCalculator\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "files": [
+            "tests/functions/global_helper.php"
+        ],
+        "psr-4": {
+            "Tests\\": "tests/"
+        }
+    },
+    "config": {
+        "bin-dir": "bin",
+        "vendor-dir": "vendor"
+    },
+    "authors": [
+        {
+            "name": "Sami Jnih",
+            "email": "everytimeicob@gmail.com"
+        }
+    ]
+}
