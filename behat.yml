@@ -1,0 +1,13 @@
+default:
+    formatters:
+        pretty: true
+    suites:
+        user_features:
+            paths: [ '%paths.base%/features/users' ]
+            contexts:
+                - Tests\Behat\UserContext
+
+        occurrence_features:
+            paths: [ '%paths.base%/features/transactions' ]
+            contexts:
+                - Tests\Behat\TransactionContext
