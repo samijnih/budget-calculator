@@ -7,6 +7,7 @@ namespace BudgetCalculator\Cli\Command\User;
 use BudgetCalculator\Cli\Command\Command;
 use BudgetCalculator\Cli\Security\AuthenticationRequired;
 use BudgetCalculator\Cli\Security\UserProvider;
+use BudgetCalculator\Facade\BudgetFacade;
 use BudgetCalculator\Facade\TransactionFacade;
 use BudgetCalculator\Facade\UserFacade;
 use League\CLImate\CLImate;
@@ -18,17 +19,20 @@ class DeleteUserCommand implements Command, AuthenticationRequired
     private UserFacade $userFacade;
     private UserProvider $userProvider;
     private TransactionFacade $transactionFacade;
+    private BudgetFacade $budgetFacade;
 
     public function __construct(
         Climate $climate,
         UserFacade $userFacade,
         UserProvider $userProvider,
-        TransactionFacade $transactionFacade
+        TransactionFacade $transactionFacade,
+        BudgetFacade $budgetFacade
     ) {
         $this->climate = $climate;
         $this->userFacade = $userFacade;
         $this->userProvider = $userProvider;
         $this->transactionFacade = $transactionFacade;
+        $this->budgetFacade = $budgetFacade;
     }
 
     public function name(): string
@@ -46,6 +50,7 @@ class DeleteUserCommand implements Command, AuthenticationRequired
             try {
                 $userId = $this->userProvider->getUser()->id();
 
+                $this->budgetFacade->deleteForUser($userId);
                 $this->transactionFacade->deleteForUser($userId);
                 $this->userFacade->delete($userId);
             } catch (Throwable $e) {

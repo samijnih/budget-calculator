@@ -28,8 +28,6 @@ You need to register your account before trying to do anything else.
 
 My app aims to be for private use only, so I need to secure the write actions. I don't want people to access transactions of other people ;)
 
-## Next release schedule
-
 ### v0.2
 
 - edit transactions
@@ -37,6 +35,8 @@ My app aims to be for private use only, so I need to secure the write actions. I
 - define budgets
 - display budgets
 - delete budgets
+
+## Next release schedule
 
 ### v0.3
 

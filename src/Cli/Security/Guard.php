@@ -41,7 +41,7 @@ class Guard
             exit(1);
         }
 
-        $user = $this->authenticator->getUser($credentials);
+        $user = $this->authenticator->getUserByCredentials($credentials);
 
         if ($user === null) {
             throw new RuntimeException('User not found.');
