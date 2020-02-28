@@ -22,6 +22,11 @@ final class CliTransformer
         $this->transactions = $transactions;
     }
 
+    public function setData(iterable $transactions): void
+    {
+        $this->transactions = $transactions;
+    }
+
     public function addDecorator(string $key, callable $decorator): void
     {
         $this->decorators[$key] = $decorator;

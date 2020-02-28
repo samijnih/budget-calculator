@@ -2,11 +2,14 @@
 
 declare(strict_types=1);
 
+use App\Cli\Budget\AddBudgetCommand;
 use App\Cli\Security\Guard;
 use App\Cli\Security\UserProvider;
 use App\Cli\Solde;
 use App\Cli\Transaction\AddTransactionCommand;
+use App\Cli\Transaction\DeleteTransactionsCommand;
 use App\Cli\Transaction\DisplayTransactionsCommand;
+use App\Cli\Transaction\EditTransactionsCommand;
 use App\Cli\User\DeleteUserCommand;
 use App\Cli\User\RegisterUserCommand;
 use App\Facade\DatabaseFacade;
@@ -82,6 +85,9 @@ $containerBuilder->addDefinitions([
     DeleteUserCommand::class => DI\autowire()->lazy(),
     AddTransactionCommand::class => DI\autowire()->lazy(),
     DisplayTransactionsCommand::class => DI\autowire()->lazy(),
+    EditTransactionsCommand::class => DI\autowire()->lazy(),
+    DeleteTransactionsCommand::class => DI\autowire()->lazy(),
+    AddBudgetCommand::class => DI\autowire()->lazy(),
     Solde::class => DI\factory(static function (ContainerInterface $container) {
         $app = new Solde($container->get(CLImate::class), $container->get(Guard::class));
 
@@ -89,6 +95,9 @@ $containerBuilder->addDefinitions([
         $app->registerCommand($container->get(DeleteUserCommand::class));
         $app->registerCommand($container->get(AddTransactionCommand::class));
         $app->registerCommand($container->get(DisplayTransactionsCommand::class));
+        $app->registerCommand($container->get(EditTransactionsCommand::class));
+        $app->registerCommand($container->get(DeleteTransactionsCommand::class));
+        $app->registerCommand($container->get(AddBudgetCommand::class));
 
         return $app;
     }),
