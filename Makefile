@@ -7,8 +7,12 @@ DT=docker-compose -f docker-compose-test.yml
 WD=$$(pwd)
 COMPOSER=docker run -it --volume $(WD):/app/ composer
 
+clean-install:
+	rm -rf vendor/
+	make composer-install
+
 composer-install:
-	$(COMPOSER) install
+	$(COMPOSER) install --prefer-dist --no-progress --no-suggest
 
 composer-update:
 	$(COMPOSER) update
