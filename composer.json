@@ -4,8 +4,6 @@
     "description": "Estimate how much you can spend according on criteria.",
     "type": "project",
     "require": {
-        "ext-pcntl": "*",
-        "ext-intl": "*",
         "ext-json": "*",
         "php": "^7.4",
         "league/climate": "^3.5",
