@@ -12,6 +12,7 @@ use BudgetCalculator\ReadModel\User\User as UserReadModel;
 use BudgetCalculator\ReadModelRepository\UserRepository as UserReadModelRepository;
 use BudgetCalculator\Cli\Security\Authenticator;
 use BudgetCalculator\Service\Clock;
+use DomainException;
 use Money\Money;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidFactory;
@@ -47,6 +48,12 @@ class UserFacade implements Authenticator
         string $password,
         Money $balance
     ): void {
+        $user = $this->readModelRepository->findByEmail($email);
+
+        if (null !== $user) {
+            throw new DomainException("User already exists with $email.");
+        }
+
         $user = new UserEntity(
             Uuid::fromString($id),
             $email,
@@ -86,7 +93,7 @@ class UserFacade implements Authenticator
         return PasswordFacade::verify($password, $user->password());
     }
 
-    public function getUser(array $credentials): ?UserReadModel
+    public function getUserByCredentials(array $credentials): ?UserReadModel
     {
         Assert::that($credentials)
             ->notEmptyKey('email');
