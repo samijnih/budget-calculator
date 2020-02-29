@@ -35,9 +35,10 @@ use Symfony\Component\ErrorHandler\Debug;
 
 require_once __DIR__.'/../vendor/autoload.php';
 
-$dotenv = Dotenv::createImmutable(__DIR__.'/../');
+$_ENV['PROJECT_DIR'] = dirname(__DIR__);
+
+$dotenv = Dotenv::createMutable(__DIR__.'/../');
 $dotenv->load();
-$dotenv->required('PROJECT_DIR')->notEmpty();
 
 $errorHandler = Debug::enable();
 
