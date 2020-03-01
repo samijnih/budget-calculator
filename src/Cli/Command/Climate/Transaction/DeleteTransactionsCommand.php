@@ -2,32 +2,33 @@
 
 declare(strict_types=1);
 
-namespace BudgetCalculator\Cli\Command\Transaction;
+namespace BudgetCalculator\Cli\Command\Climate\Transaction;
 
+use BudgetCalculator\Cli\Adapter\Cli;
 use BudgetCalculator\Cli\Command\Command;
+use BudgetCalculator\Cli\Output\Question\CheckboxesInput;
 use BudgetCalculator\Cli\Security\AuthenticationRequired;
 use BudgetCalculator\Cli\Security\UserProvider;
 use BudgetCalculator\Cli\Transformer\CliTransformer;
 use BudgetCalculator\Facade\TransactionFacade;
-use League\CLImate\CLImate;
 use Money\Money;
 use Money\MoneyFormatter;
 use Throwable;
 
 class DeleteTransactionsCommand implements Command, AuthenticationRequired
 {
-    private Climate $climate;
+    private Cli $cli;
     private MoneyFormatter $moneyFormatter;
     private TransactionFacade $transactionFacade;
     private UserProvider $userProvider;
 
     public function __construct(
-        Climate $climate,
+        Cli $cli,
         MoneyFormatter $moneyFormatter,
         TransactionFacade $transactionFacade,
         UserProvider $userProvider
     ) {
-        $this->climate = $climate;
+        $this->cli = $cli;
         $this->moneyFormatter = $moneyFormatter;
         $this->transactionFacade = $transactionFacade;
         $this->userProvider = $userProvider;
@@ -40,12 +41,12 @@ class DeleteTransactionsCommand implements Command, AuthenticationRequired
 
     public function execute(): void
     {
-        $this->climate->br();
+        $this->cli->lineBreak();
 
         $transactions = $this->transactionFacade->listForUser($this->userProvider->getUser()->id());
 
         if (empty($transactions)) {
-            $this->climate->info('You do not have any transaction. Please add some.');
+            $this->cli->outputInfo('You do not have any transaction. Please add some.');
 
             return;
         }
@@ -71,28 +72,28 @@ class DeleteTransactionsCommand implements Command, AuthenticationRequired
             );
         }
 
-        $transactions = $this->climate->checkboxes('Select one or more transaction:', $options)->prompt();
+        $transactions = $this->cli->prompt(new CheckboxesInput('transactions', 'Select one or more transaction:', $options));
 
-        $this->climate->br();
+        $this->cli->lineBreak();
 
-        if ($this->climate->confirm('Would you like to confirm?')->confirmed()) {
+        if ($this->cli->confirm('Would you like to confirm?')) {
             try {
                 $this->transactionFacade->deleteMany($transactions);
             } catch (Throwable $e) {
-                $this->climate->br();
-                $this->climate->to('error')->error($e->getMessage());
+                $this->cli->lineBreak();
+                $this->cli->outputError($e->getMessage());
 
                 return;
             }
         } else {
-            $this->climate->br();
-            $this->climate->info('Operation cancelled.');
+            $this->cli->lineBreak();
+            $this->cli->outputInfo('Operation cancelled.');
 
             return;
         }
 
-        $this->climate->br();
-        $this->climate->green('Transactions deleted!');
+        $this->cli->lineBreak();
+        $this->cli->output('Transactions deleted!', 'green');
     }
 
     public function label(): string

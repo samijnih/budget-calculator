@@ -4,22 +4,23 @@ declare(strict_types=1);
 
 namespace BudgetCalculator\Cli;
 
+use BudgetCalculator\Cli\Adapter\Cli;
 use BudgetCalculator\Cli\Command\Command;
+use BudgetCalculator\Cli\Output\Question\RadioInput;
 use BudgetCalculator\Cli\Security\AuthenticationRequired;
-use BudgetCalculator\Cli\Security\Guard;
-use League\CLImate\CLImate;
+use BudgetCalculator\Cli\Security\Climate\ClimateGuard;
 
-final class CliBudgetCalculator
+final class ClimateBudgetCalculator implements BudgetCalculator
 {
-    private CLImate $climate;
-    private Guard $guard;
+    private Cli $cli;
+    private ClimateGuard $guard;
     /** @var Command[] */
     private array $commands = [];
     private array $menu = [];
 
-    public function __construct(CLImate $climate, Guard $guard)
+    public function __construct(Cli $cli, ClimateGuard $guard)
     {
-        $this->climate = $climate;
+        $this->cli = $cli;
         $this->guard = $guard;
     }
 
@@ -35,28 +36,27 @@ final class CliBudgetCalculator
     {
         $this->registerCommand($this->generateQuitCommand());
 
-        while (true) {
-            $this->climate->clear();
+        $this->cli->clear();
 
-            $selected = $this->climate->radio('Menu', $this->menu)->prompt();
+        $selected = $this->cli->prompt(new RadioInput('menu', 'Menu', $this->menu));
 
-            foreach ($this->commands as $command) {
-                if ($command->name() === $selected) {
-                    if ($command instanceof AuthenticationRequired) {
-                        $this->guard->authenticate();
-                    }
-
-                    $command->execute();
+        foreach ($this->commands as $command) {
+            if ($command->name() === $selected) {
+                if ($command instanceof AuthenticationRequired) {
+                    $this->guard->authenticate();
                 }
-            }
 
-            $this->climate->br();
-            $confirmation = $this->climate->confirm('Return to the menu?');
-
-            if (!$confirmation->confirmed()) {
-                exit(0);
+                $command->execute();
             }
         }
+
+        $this->cli->lineBreak();
+
+        if (!$this->cli->confirm('Return to the menu?')) {
+            exit(0);
+        }
+
+        $this->run();
     }
 
     private function generateQuitCommand(): Command

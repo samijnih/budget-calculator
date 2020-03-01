@@ -2,31 +2,31 @@
 
 declare(strict_types=1);
 
-namespace BudgetCalculator\Cli\Command\Transaction;
+namespace BudgetCalculator\Cli\Command\Climate\Transaction;
 
+use BudgetCalculator\Cli\Adapter\Cli;
 use BudgetCalculator\Cli\Command\Command;
 use BudgetCalculator\Cli\Security\AuthenticationRequired;
 use BudgetCalculator\Cli\Security\UserProvider;
 use BudgetCalculator\Cli\Transformer\CliTransformer;
 use BudgetCalculator\Facade\TransactionFacade;
-use League\CLImate\CLImate;
 use Money\Money;
 use Money\MoneyFormatter;
 
 class DisplayTransactionsCommand implements Command, AuthenticationRequired
 {
-    private Climate $climate;
+    private Cli $cli;
     private MoneyFormatter $moneyFormatter;
     private TransactionFacade $transactionFacade;
     private UserProvider $userProvider;
 
     public function __construct(
-        Climate $climate,
+        Cli $cli,
         MoneyFormatter $moneyFormatter,
         TransactionFacade $transactionFacade,
         UserProvider $userProvider
     ) {
-        $this->climate = $climate;
+        $this->cli = $cli;
         $this->moneyFormatter = $moneyFormatter;
         $this->transactionFacade = $transactionFacade;
         $this->userProvider = $userProvider;
@@ -39,12 +39,12 @@ class DisplayTransactionsCommand implements Command, AuthenticationRequired
 
     public function execute(): void
     {
-        $this->climate->br();
+        $this->cli->lineBreak();
 
         $transactions = $this->transactionFacade->listForUser($this->userProvider->getUser()->id());
 
         if (empty($transactions)) {
-            $this->climate->info('You do not have any transaction. Please add some.');
+            $this->cli->outputInfo('You do not have any transaction. Please add some.');
 
             return;
         }
@@ -52,7 +52,7 @@ class DisplayTransactionsCommand implements Command, AuthenticationRequired
         $formatter = new CliTransformer($transactions);
         $formatter->addDecorator('amount', fn (Money $amount): string => $this->moneyFormatter->format($amount));
 
-        $this->climate->table($formatter->transform([
+        $this->cli->table($formatter->transform([
             'label',
             'amount',
             'type',

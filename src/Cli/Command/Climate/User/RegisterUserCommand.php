@@ -2,11 +2,14 @@
 
 declare(strict_types=1);
 
-namespace BudgetCalculator\Cli\Command\User;
+namespace BudgetCalculator\Cli\Command\Climate\User;
 
+use BudgetCalculator\Cli\Adapter\Cli;
 use BudgetCalculator\Cli\Command\Command;
+use BudgetCalculator\Cli\Output\Question\PasswordInput;
+use BudgetCalculator\Cli\Output\Question\RadioInput;
+use BudgetCalculator\Cli\Output\Question\TextInput;
 use BudgetCalculator\Facade\UserFacade;
-use League\CLImate\CLImate;
 use Money\Currency;
 use Money\MoneyParser;
 use Throwable;
@@ -15,16 +18,16 @@ class RegisterUserCommand implements Command
 {
     public const NAME = 'user:register';
 
-    private Climate $climate;
+    private Cli $cli;
     private MoneyParser $moneyParser;
     private UserFacade $userFacade;
 
     public function __construct(
-        Climate $climate,
+        Cli $cli,
         MoneyParser $moneyParser,
         UserFacade $userFacade
     ) {
-        $this->climate = $climate;
+        $this->cli = $cli;
         $this->moneyParser = $moneyParser;
         $this->userFacade = $userFacade;
     }
@@ -36,21 +39,21 @@ class RegisterUserCommand implements Command
 
     public function execute(): void
     {
-        $this->climate->br();
+        $this->cli->lineBreak();
 
         $answers = [
-            'email' => $this->climate->input('Email:')->prompt(),
-            'password' => $this->climate->password('Password:')->prompt(),
-            'balance_currency' => $this->climate->radio('Currency:', [
+            'email' => $this->cli->prompt(new TextInput('email', 'Email:')),
+            'password' => $this->cli->prompt(new PasswordInput('password', 'Password:')),
+            'balance_currency' => $this->cli->prompt(new RadioInput('balance_currency', 'Currency:', [
                 'EUR' => '€',
                 'USD' => '$',
-            ])->prompt(),
-            'balance_amount' => $this->climate->input('Balance:')->prompt(),
+            ])),
+            'balance_amount' => $this->cli->prompt(new TextInput('balance_amount', 'Balance:')),
         ];
 
-        $this->climate->br();
+        $this->cli->lineBreak();
 
-        if ($this->climate->confirm('Would you like to confirm?')->confirmed()) {
+        if ($this->cli->confirm('Would you like to confirm?')) {
             try {
                 $this->userFacade->register(
                     $this->userFacade->generateId()->toString(),
@@ -62,20 +65,20 @@ class RegisterUserCommand implements Command
                     ),
                 );
             } catch (Throwable $e) {
-                $this->climate->br();
-                $this->climate->to('error')->error($e->getMessage());
+                $this->cli->lineBreak();
+                $this->cli->outputError($e->getMessage());
 
                 return;
             }
         } else {
-            $this->climate->br();
-            $this->climate->info('Operation cancelled.');
+            $this->cli->lineBreak();
+            $this->cli->outputInfo('Operation cancelled.');
 
             return;
         }
 
-        $this->climate->br();
-        $this->climate->green('User registered!');
+        $this->cli->lineBreak();
+        $this->cli->output('User registered!', 'green');
     }
 
     public function label(): string

@@ -2,35 +2,39 @@
 
 declare(strict_types=1);
 
-namespace BudgetCalculator\Cli\Command\Transaction;
+namespace BudgetCalculator\Cli\Command\Climate\Transaction;
 
+use BudgetCalculator\Cli\Adapter\Cli;
 use BudgetCalculator\Cli\Command\Command;
 use BudgetCalculator\Cli\Helper\FormatterHelper;
+use BudgetCalculator\Cli\Output\Question\RadioInput;
+use BudgetCalculator\Cli\Output\Question\TextInput;
 use BudgetCalculator\Cli\Security\AuthenticationRequired;
 use BudgetCalculator\Cli\Security\UserProvider;
 use BudgetCalculator\Facade\TransactionFacade;
+use BudgetCalculator\Model\DateFormatter;
 use BudgetCalculator\Model\Transaction\Type;
-use League\CLImate\CLImate;
+use DateTime;
 use Money\Currency;
 use Money\MoneyParser;
 use Throwable;
 
 class AddTransactionCommand implements Command, AuthenticationRequired
 {
-    use FormatterHelper;
+    use FormatterHelper, DateFormatter;
 
-    private Climate $climate;
+    private Cli $cli;
     private MoneyParser $moneyParser;
     private TransactionFacade $transactionFacade;
     private UserProvider $userProvider;
 
     public function __construct(
-        Climate $climate,
+        Cli $cli,
         MoneyParser $moneyParser,
         TransactionFacade $transactionFacade,
         UserProvider $userProvider
     ) {
-        $this->climate = $climate;
+        $this->cli = $cli;
         $this->moneyParser = $moneyParser;
         $this->transactionFacade = $transactionFacade;
         $this->userProvider = $userProvider;
@@ -43,25 +47,30 @@ class AddTransactionCommand implements Command, AuthenticationRequired
 
     public function execute(): void
     {
-        $this->climate->br();
+        $this->cli->lineBreak();
 
         $answers = [
-            'label' => $this->climate->input('What is the label?')->prompt(),
-            'currency' => $this->climate->radio('What is the currency?', [
+            'label' => $this->cli->prompt(new TextInput('label', 'What is the label?')),
+            'currency' => $this->cli->prompt(new RadioInput('currency', 'What is the currency?', [
                 'EUR' => '€',
                 'USD' => '$',
-            ])->prompt(),
-            'amount' => $this->climate->input('What is the amount?')->prompt(),
-            'type' => $this->climate->radio('What kind of transaction is it?', [
+            ])),
+            'amount' => $this->cli->prompt(new TextInput('amount', 'What is the amount?')),
+            'type' => $this->cli->prompt(new RadioInput('type', 'What kind of transaction is it?', [
                 Type::debit()->toString() => 'debit',
                 Type::credit()->toString() => 'credit',
-            ])->prompt(),
-            'date' => $this->climate->input('What is the date of your transaction? Format: MM-DD-YYYY')->prompt()
+            ])),
+            'date' => $this->cli->prompt(new TextInput(
+                'date',
+                'What is the date of your transaction? Format: MM-DD-YYYY',
+                [],
+                $this->format(new DateTime(), 'm-d-Y')
+            )),
         ];
 
-        $this->climate->br();
+        $this->cli->lineBreak();
 
-        if ($this->climate->confirm('Would you like to confirm?')->confirmed()) {
+        if ($this->cli->confirm('Would you like to confirm?')) {
             try {
                 $this->transactionFacade->add(
                     $this->transactionFacade->generateId()->toString(),
@@ -75,20 +84,20 @@ class AddTransactionCommand implements Command, AuthenticationRequired
                     $this->formatDate($answers['date'], 'm-d-Y', 'Y-m-d'),
                 );
             } catch (Throwable $e) {
-                $this->climate->br();
-                $this->climate->to('error')->error($e->getMessage());
+                $this->cli->lineBreak();
+                $this->cli->outputError($e->getMessage());
 
                 return;
             }
         } else {
-            $this->climate->br();
-            $this->climate->info('Operation cancelled.');
+            $this->cli->lineBreak();
+            $this->cli->outputInfo('Operation cancelled.');
 
             return;
         }
 
-        $this->climate->br();
-        $this->climate->green('Transaction saved!');
+        $this->cli->lineBreak();
+        $this->cli->output('Transaction saved!', 'green');
     }
 
     public function label(): string

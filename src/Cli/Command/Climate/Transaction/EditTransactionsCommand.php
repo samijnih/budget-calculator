@@ -2,10 +2,14 @@
 
 declare(strict_types=1);
 
-namespace BudgetCalculator\Cli\Command\Transaction;
+namespace BudgetCalculator\Cli\Command\Climate\Transaction;
 
+use BudgetCalculator\Cli\Adapter\Cli;
 use BudgetCalculator\Cli\Command\Command;
 use BudgetCalculator\Cli\Helper\FormatterHelper;
+use BudgetCalculator\Cli\Output\Question\CheckboxesInput;
+use BudgetCalculator\Cli\Output\Question\RadioInput;
+use BudgetCalculator\Cli\Output\Question\TextInput;
 use BudgetCalculator\Cli\Security\AuthenticationRequired;
 use BudgetCalculator\Cli\Security\UserProvider;
 use BudgetCalculator\Cli\Transformer\CliTransformer;
@@ -13,9 +17,10 @@ use BudgetCalculator\EntityRepository\TransactionRepository;
 use BudgetCalculator\Facade\TransactionFacade;
 use BudgetCalculator\Helper\MoneyHelper;
 use BudgetCalculator\Model\Date;
+use BudgetCalculator\Model\DateFormatter;
 use BudgetCalculator\Model\Transaction\Type;
 use BudgetCalculator\Service\Clock;
-use League\CLImate\CLImate;
+use DateTime;
 use Money\Currency;
 use Money\Money;
 use Money\MoneyFormatter;
@@ -25,9 +30,9 @@ use Throwable;
 
 class EditTransactionsCommand implements Command, AuthenticationRequired
 {
-    use FormatterHelper, MoneyHelper;
+    use FormatterHelper, DateFormatter, MoneyHelper;
 
-    private Climate $climate;
+    private Cli $cli;
     private MoneyFormatter $moneyFormatter;
     private MoneyParser $moneyParser;
     private TransactionFacade $transactionFacade;
@@ -36,7 +41,7 @@ class EditTransactionsCommand implements Command, AuthenticationRequired
     private Clock $clock;
 
     public function __construct(
-        Climate $climate,
+        Cli $cli,
         MoneyFormatter $moneyFormatter,
         MoneyParser $moneyParser,
         TransactionFacade $transactionFacade,
@@ -44,7 +49,7 @@ class EditTransactionsCommand implements Command, AuthenticationRequired
         UserProvider $userProvider,
         Clock $clock
     ) {
-        $this->climate = $climate;
+        $this->cli = $cli;
         $this->moneyFormatter = $moneyFormatter;
         $this->moneyParser = $moneyParser;
         $this->transactionFacade = $transactionFacade;
@@ -60,12 +65,12 @@ class EditTransactionsCommand implements Command, AuthenticationRequired
 
     public function execute(): void
     {
-        $this->climate->br();
+        $this->cli->lineBreak();
 
         $transactions = $this->transactionFacade->listForUser($this->userProvider->getUser()->id());
 
         if (empty($transactions)) {
-            $this->climate->info('You do not have any transaction. Please add some.');
+            $this->cli->outputInfo('You do not have any transaction. Please add some.');
 
             return;
         }
@@ -92,47 +97,51 @@ class EditTransactionsCommand implements Command, AuthenticationRequired
             );
         }
 
-        $transactionId = $this->climate->radio('Select a transaction:', $options)->prompt();
+        $transactionId = $this->cli->prompt(new RadioInput('transaction_id', 'Select a transaction:', $options));
 
-        $this->climate->br();
+        $this->cli->lineBreak();
 
-        $fields = $this->climate->checkboxes(
-            'What do you want to edit?', [
+        $fields = $this->cli->prompt(new CheckboxesInput('fields', 'What do you want to edit?', [
             'label',
             'amount',
             'type',
             'date',
-        ])->prompt();
+        ]));
         $fields = array_combine($fields, array_fill(0, count($fields), null));
 
         $questions = [
             'label' => function (): string {
-                return $this->climate->input('What is the label?')->prompt();
+                return $this->cli->prompt(new TextInput('label', 'What is the label?'));
             },
             'amount' => function (): Money {
-                $currency = $this->climate->radio('What is the currency?', [
+                $currency = $this->cli->prompt(new RadioInput('currency', 'What is the currency?', [
                     'EUR' => '€',
                     'USD' => '$',
-                ])->prompt();
+                ]));
 
-                $this->climate->br();
+                $this->cli->lineBreak();
 
                 $amount = $this->replaceInString(
                     ',',
                     '.',
-                    $this->climate->input('What is the amount?')->prompt()
+                    $this->cli->prompt(new TextInput('amount', 'What is the amount?'))
                 );
 
                 return $this->moneyParser->parse($amount, new Currency($currency));
             },
             'type' => function (): string {
-                return $this->climate->radio('What kind of transaction is it?', [
+                return $this->cli->prompt(new RadioInput('type', 'What kind of transaction is it?', [
                     Type::debit()->toString() => 'debit',
                     Type::credit()->toString() => 'credit',
-                ])->prompt();
+                ]));
             },
             'date' => function (): string {
-                $date = $this->climate->input('What is the date of your transaction? Format: MM-DD-YYYY')->prompt();
+                $date = $this->cli->prompt(new TextInput(
+                    'date',
+                    'What is the date of your transaction? Format: MM-DD-YYYY',
+                    [],
+                    $this->format(new DateTime(), 'm-d-Y'),
+                ));
 
                 return $this->formatDate($date, 'm-d-Y', 'Y-m-d');
             },
@@ -160,26 +169,26 @@ class EditTransactionsCommand implements Command, AuthenticationRequired
             }
         }
 
-        $this->climate->br();
+        $this->cli->lineBreak();
 
-        if ($this->climate->confirm('Would you like to confirm?')->confirmed()) {
+        if ($this->cli->confirm('Would you like to confirm?')) {
             try {
                 $this->transactionRepository->update($transaction);
             } catch (Throwable $e) {
-                $this->climate->br();
-                $this->climate->to('error')->error($e->getMessage());
+                $this->cli->lineBreak();
+                $this->cli->outputError($e->getMessage());
 
                 return;
             }
         } else {
-            $this->climate->br();
-            $this->climate->info('Operation cancelled.');
+            $this->cli->lineBreak();
+            $this->cli->outputInfo('Operation cancelled.');
 
             return;
         }
 
-        $this->climate->br();
-        $this->climate->green('Transaction edited!');
+        $this->cli->lineBreak();
+        $this->cli->output('Transaction edited!', 'green');
     }
 
     public function label(): string

@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-use BudgetCalculator\Cli\Command\Budget\DefineBudgetCommand;
-use BudgetCalculator\Cli\Command\Budget\DeleteBudgetsCommand;
-use BudgetCalculator\Cli\Command\Budget\DisplayBudgetsCommand;
-use BudgetCalculator\Cli\Command\Transaction\AddTransactionCommand;
-use BudgetCalculator\Cli\Command\Transaction\DeleteTransactionsCommand;
-use BudgetCalculator\Cli\Command\Transaction\DisplayTransactionsCommand;
-use BudgetCalculator\Cli\Command\Transaction\EditTransactionsCommand;
-use BudgetCalculator\Cli\Command\User\DeleteUserCommand;
-use BudgetCalculator\Cli\Command\User\RegisterUserCommand;
+use BudgetCalculator\Cli\Command\Climate\Budget\DefineBudgetCommand;
+use BudgetCalculator\Cli\Command\Climate\Budget\DeleteBudgetsCommand;
+use BudgetCalculator\Cli\Command\Climate\Budget\DisplayBudgetsCommand;
+use BudgetCalculator\Cli\Command\Climate\Transaction\AddTransactionCommand;
+use BudgetCalculator\Cli\Command\Climate\Transaction\DeleteTransactionsCommand;
+use BudgetCalculator\Cli\Command\Climate\Transaction\DisplayTransactionsCommand;
+use BudgetCalculator\Cli\Command\Climate\Transaction\EditTransactionsCommand;
+use BudgetCalculator\Cli\Command\Climate\User\DeleteUserCommand;
+use BudgetCalculator\Cli\Command\Climate\User\RegisterUserCommand;
 use function DI\autowire;
 
 return [
