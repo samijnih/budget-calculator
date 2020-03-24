@@ -36,11 +36,17 @@ My app aims to be for private use only, so I need to secure the write actions. I
 - display budgets
 - delete budgets
 
-## Next release schedule
-
 ### v0.3
 
 - rethink the launcher
     - what about getting two options (sign-in / sign-up)
         - selecting *sign-up* could run the user registration command
         - selecting *sign-in* could run a new menu with only authenticated operations
+- group commands by namespace:
+  - user
+  - transaction
+  - budget
+
+## Next release schedule
+
+To be defined.

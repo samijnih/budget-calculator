@@ -24,6 +24,7 @@ $containerBuilder->addDefinitions(
     __DIR__.'/commands.php',
     __DIR__.'/common.php',
     __DIR__.'/facades.php',
+    __DIR__.'/menu_builders.php',
     __DIR__.'/repositories.php',
     __DIR__.'/security.php',
 );

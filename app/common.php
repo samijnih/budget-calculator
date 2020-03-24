@@ -5,7 +5,6 @@ declare(strict_types=1);
 use BudgetCalculator\Facade\DatabaseFacade;
 use BudgetCalculator\Service\Clock;
 use Doctrine\DBAL\Connection;
-use League\CLImate\CLImate;
 use Money\Currencies;
 use Money\Currencies\ISOCurrencies;
 use Money\Formatter\AggregateMoneyFormatter;
@@ -19,7 +18,6 @@ use function DI\autowire;
 use function DI\factory;
 
 return [
-    CLImate::class => autowire()->lazy(),
     Connection::class => factory(static fn () => DatabaseFacade::getConnectionFromUrl($_ENV['DB_URL'])),
     UuidFactory::class => autowire()->lazy(),
     Clock::class => autowire()->lazy(),

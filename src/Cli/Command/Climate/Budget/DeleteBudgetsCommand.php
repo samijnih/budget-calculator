@@ -2,15 +2,16 @@
 
 declare(strict_types=1);
 
-namespace BudgetCalculator\Cli\Command\Budget;
+namespace BudgetCalculator\Cli\Command\Climate\Budget;
 
+use BudgetCalculator\Cli\Adapter\Cli;
 use BudgetCalculator\Cli\Command\Command;
 use BudgetCalculator\Cli\Helper\FormatterHelper;
+use BudgetCalculator\Cli\Output\Question\CheckboxesInput;
 use BudgetCalculator\Cli\Security\AuthenticationRequired;
 use BudgetCalculator\Cli\Security\UserProvider;
 use BudgetCalculator\Cli\Transformer\CliTransformer;
 use BudgetCalculator\Facade\BudgetFacade;
-use League\CLImate\CLImate;
 use Money\Money;
 use Money\MoneyFormatter;
 use Throwable;
@@ -19,18 +20,18 @@ class DeleteBudgetsCommand implements Command, AuthenticationRequired
 {
     use FormatterHelper;
 
-    private Climate $climate;
+    private Cli $cli;
     private MoneyFormatter $moneyFormatter;
     private BudgetFacade $budgetFacade;
     private UserProvider $userProvider;
 
     public function __construct(
-        Climate $climate,
+        Cli $cli,
         MoneyFormatter $moneyFormatter,
         BudgetFacade $budgetFacade,
         UserProvider $userProvider
     ) {
-        $this->climate = $climate;
+        $this->cli = $cli;
         $this->moneyFormatter = $moneyFormatter;
         $this->budgetFacade = $budgetFacade;
         $this->userProvider = $userProvider;
@@ -43,12 +44,12 @@ class DeleteBudgetsCommand implements Command, AuthenticationRequired
 
     public function execute(): void
     {
-        $this->climate->br();
+        $this->cli->lineBreak();
 
         $budgets = $this->budgetFacade->listForUser($this->userProvider->getUser()->id());
 
         if (empty($budgets)) {
-            $this->climate->info('You do not have any budget. Please add some.');
+            $this->cli->outputInfo('You do not have any budget. Please add some.');
 
             return;
         }
@@ -72,28 +73,28 @@ class DeleteBudgetsCommand implements Command, AuthenticationRequired
             );
         }
 
-        $budgets = $this->climate->checkboxes('Select one or more budget:', $options)->prompt();
+        $budgets = $this->cli->prompt(new CheckboxesInput('budgets', 'Select one or more budget:', $options));
 
-        $this->climate->br();
+        $this->cli->lineBreak();
 
-        if ($this->climate->confirm('Would you like to confirm?')->confirmed()) {
+        if ($this->cli->confirm('Would you like to confirm?')) {
             try {
                 $this->budgetFacade->deleteMany($budgets);
             } catch (Throwable $e) {
-                $this->climate->br();
-                $this->climate->to('error')->error($e->getMessage());
+                $this->cli->lineBreak();
+                $this->cli->outputError($e->getMessage());
 
                 return;
             }
         } else {
-            $this->climate->br();
-            $this->climate->info('Operation cancelled.');
+            $this->cli->lineBreak();
+            $this->cli->outputInfo('Operation cancelled.');
 
             return;
         }
 
-        $this->climate->br();
-        $this->climate->green('Budget deleted!');
+        $this->cli->lineBreak();
+        $this->cli->output('Budget deleted!', 'green');
     }
 
     public function label(): string
